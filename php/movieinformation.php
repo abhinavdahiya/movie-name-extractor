@@ -1,6 +1,7 @@
 <?php
 /**
  * this library has been created by Minhaz @Cistoner
+ * contributer Abhinav @Cistoner
  * Anyone can use this library in their applications without any permissions
  * Further contributions will be welcomed.
  */
@@ -12,6 +13,9 @@
  */
 function getmovieDetails($str)
 {
+	$words = preg_split('/[.\s]/', $str);
+        $words = array_filter($words, create_function('$var','return !(preg_match("/(?:HDTV|bluray|\w{2,3}rip)|(?:x264)|(?:AC\d)|(?:mp4|avi|mkv|flv)|(?:YIFY|H-?SBS|DTS)/Ui", $var));'));
+     $str=join(' ', $words);
 	/**
 	 * declaring return variable as array
 	 */
@@ -29,14 +33,16 @@ function getmovieDetails($str)
 	 * episode_no = 5 from first case
 	 * expecting movie not to contial both : in that case first one will be considered
 	 */
+	
 	$regex = "/\[.*?\]|\(.*?\)/";
 	preg_match_all($regex,$str,$out, PREG_PATTERN_ORDER);
 	if(count($out) && count($out[0]) &&($out[0][0] != "" ))
 	{
 		foreach($out[0] as $o)
 		{
-			$str = str_replace($o,"",$str);
-			$regex = "/s(\d{1,2})e(\d{1,3})|(\d{1,2})x(\d{1,3})/";
+			if(!preg_match("/\d{4}/",$o))
+				$str = str_replace($o,"",$str);
+			$regex = "/s(\d{1,2})e(\d{1,3})|(\d{1,2})x(\d{1,3})/Ui";
 			preg_match_all($regex,$o,$secOut, PREG_PATTERN_ORDER);
 			if(count($secOut) && count($secOut[0]))
 			{
@@ -46,6 +52,21 @@ function getmovieDetails($str)
 				else if(count($secOut[4]) && ($secOut[4][0] != "" ))$output['episode_no'] = $secOut[4][0];
 			}
 		}
+	}
+	/**
+	 * code to get information like season 05 episode 04
+	 * it extract infrmation of form
+	 * season = 05
+	 * episode_no = 04 from first case
+	 * expecting movie not to contial both : in that case first one will be considered
+	 */
+	$regex = "/season (\d{2}) episode (\d{2})/Ui";
+	preg_match_all($regex,$str,$out, PREG_PATTERN_ORDER);
+	if(count($out) && count($out[0]) &&($out[0][0] != "" ))
+	{
+		$output['season']=$out[1][0];
+		$output['episode_no']=$out[2][0];
+		
 	}
 	
 	/**
@@ -68,11 +89,10 @@ function getmovieDetails($str)
 		$str = str_replace($out[0][0],"",$str);
 		$output['resolution'] = $out[0][0];
 	}
-	
 	/**
 	 * task 4: identify and replace movie year
 	 */
-	$regex = "/\d{3,4}/i";
+	$regex = "/\(?\d{4}\)?/i";
 	preg_match_all($regex,$str,$out, PREG_PATTERN_ORDER);
 	if(count($out) && count($out[0]))
 	{
@@ -100,7 +120,5 @@ function getmovieDetails($str)
 	
 	return $output;
 } 
-
-
 
 ?>
